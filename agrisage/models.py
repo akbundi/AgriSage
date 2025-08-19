@@ -1,13 +1,14 @@
-
 from typing import Optional, Dict, Any, List
 from pydantic import BaseModel, Field
 
 class Context(BaseModel):
-    location: Optional[str] = "Sikar, Rajasthan"
-    district: Optional[str] = "Sikar"
-    crop: Optional[str] = "wheat"
-    stage: Optional[str] = "vegetative"
-    profile: Optional[Dict[str, Any]] = Field(default_factory=lambda: {"land_owner": True, "cultivator": True, "notified_district": True})
+    location: Optional[str] = None
+    district: Optional[str] = None
+    crop: Optional[str] = None
+    stage: Optional[str] = None
+    profile: Optional[Dict[str, Any]] = Field(
+        default_factory=lambda: {"land_owner": True, "cultivator": True, "notified_district": True}
+    )
     soil_card: Optional[Dict[str, Any]] = None
 
 class AskRequest(BaseModel):
@@ -25,3 +26,4 @@ class IngestDoc(BaseModel):
     id: str
     text: str
     meta: Dict[str, Any] = {}
+
