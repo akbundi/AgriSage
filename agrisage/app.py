@@ -1,9 +1,11 @@
-
+from fastapi.staticfiles import StaticFiles
 from fastapi import FastAPI, HTTPException
 from .rag_store import MiniVectorStore, Doc
 from .agent import AgriAgent
 from .models import AskRequest, AskResponse, IngestDoc
 from typing import Dict, Any
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
 
 # Seed docs for demo
 SEED_DOCS = [
@@ -14,6 +16,14 @@ SEED_DOCS = [
 ]
 
 app = FastAPI(title="AgriSage Agent", version="0.1.0")
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 STORE = MiniVectorStore()
 for d in SEED_DOCS:
     STORE.upsert(d)
@@ -39,3 +49,16 @@ def ask(req: AskRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return AskResponse(answer=resp.answer, citations=resp.citations, explain={"intent": resp.intent, "language": resp.language, "steps": resp.steps, "confidence": resp.confidence, "raw": resp.raw}, warnings=resp.warnings, meta={"retrieved_docs": resp.metrics.get("retrieved_docs", 0)})
+app.mount("/static", StaticFiles(directory="../frontend/build/static"), name="static")
+
+@app.get("/")
+def serve_root():
+    return FileResponse("../frontend/build/index.html")
+
+@app.get("/{full_path:path}")
+def serve_react(full_path: str):
+    """
+    Catch-all route: serve index.html for React Router deep links
+    (like /about, /dashboard, etc.)
+    """
+    return FileResponse("../frontend/build/index.html")
